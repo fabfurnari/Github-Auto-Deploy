@@ -2,7 +2,7 @@
 
 import json, urlparse, sys, os
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from subprocess import call, check_output
+from subprocess import check_output
 import logging
 
 log_file = '/home/builder/log/daemon.log'
