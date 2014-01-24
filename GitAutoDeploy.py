@@ -2,7 +2,13 @@
 
 import json, urlparse, sys, os
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
-from subprocess import call
+from subprocess import call, check_output
+import logging
+
+log_file = '/home/builder/log/daemon.log'
+
+
+logging.basicConfig(format='%(asctime)s %(message)s',filename=log_file,level=logging.DEBUG)
 
 class GitAutoDeploy(BaseHTTPRequestHandler):
 
@@ -17,23 +23,28 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
             try:
                 configString = open(myClass.CONFIG_FILEPATH).read()
             except:
+                logging.error('Could not load ' + myClass.CONFIG_FILEPATH + ' file')
                 sys.exit('Could not load ' + myClass.CONFIG_FILEPATH + ' file')
 
             try:
                 myClass.config = json.loads(configString)
             except:
+                logging.error(myClass.CONFIG_FILEPATH + ' file is not valid json')
                 sys.exit(myClass.CONFIG_FILEPATH + ' file is not valid json')
 
             for repository in myClass.config['repositories']:
                 if(not os.path.isdir(repository['path'])):
+                    logging.error('Directory ' + repository['path'] + ' not found')
                     sys.exit('Directory ' + repository['path'] + ' not found')
                 if(not os.path.isdir(repository['path'] + '/.git')):
+                    logging.error('Directory ' + repository['path'] + ' not found')
                     sys.exit('Directory ' + repository['path'] + ' is not a Git repository')
 
         return myClass.config
 
     def do_POST(self):
         urls = self.parseRequest()
+        logging.info("Received POST request for %s " % urls)
         for url in urls:
             paths = self.getMatchingPaths(url)
             for path in paths:
@@ -43,11 +54,12 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
     def parseRequest(self):
         length = int(self.headers.getheader('content-length'))
         body = self.rfile.read(length)
-        post = urlparse.parse_qs(body)
+        post = urlparse.parse_qs(body, strict_parsing=True)
         items = []
         for itemString in post['payload']:
             item = json.loads(itemString)
             items.append(item['repository']['url'])
+        logging.debug("Items: " % items)
         return items
 
     def getMatchingPaths(self, repoUrl):
@@ -65,9 +77,9 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
 
     def pull(self, path):
         if(not self.quiet):
-            print "\nPost push request received"
-            print 'Updating ' + path
-        call(['cd "' + path + '" && git pull'], shell=True)
+            logging.info("Post push request received")
+            logging.info('Updating ' + path)
+        logging.info(check_output(['cd "' + path + '" && git pull'], shell=True))
 
     def deploy(self, path):
         config = self.getConfig()
@@ -75,20 +87,20 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
             if(repository['path'] == path):
                 if 'deploy' in repository:
                      if(not self.quiet):
-                         print 'Executing deploy command'
-                     call(['cd "' + path + '" && ' + repository['deploy']], shell=True)
+                         logging.info("Executing deploy command for %s" % repository['path'])
+                     logging.info(check_output(['cd "' + path + '" && ' + repository['deploy']], shell=True))
                 break
 
 def main():
     try:
         server = None
-        for arg in sys.argv: 
+        for arg in sys.argv:
             if(arg == '-d' or arg == '--daemon-mode'):
                 GitAutoDeploy.daemon = True
                 GitAutoDeploy.quiet = True
             if(arg == '-q' or arg == '--quiet'):
                 GitAutoDeploy.quiet = True
-                
+
         if(GitAutoDeploy.daemon):
             pid = os.fork()
             if(pid != 0):
@@ -96,10 +108,10 @@ def main():
             os.setsid()
 
         if(not GitAutoDeploy.quiet):
-            print 'Github Autodeploy Service v 0.1 started'
+            logging.info('Github Autodeploy Service v 0.1 started')
         else:
-            print 'Github Autodeploy Service v 0.1 started in daemon mode'
-             
+            logging.info('Github Autodeploy Service v 0.1 started in daemon mode')
+
         server = HTTPServer(('', GitAutoDeploy.getConfig()['port']), GitAutoDeploy)
         server.serve_forever()
     except (KeyboardInterrupt, SystemExit) as e:
@@ -110,7 +122,9 @@ def main():
             server.socket.close()
 
         if(not GitAutoDeploy.quiet):
-            print 'Goodbye'
+            logging.warning('Goodbye')
 
 if __name__ == '__main__':
      main()
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
