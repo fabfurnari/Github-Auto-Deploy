@@ -16,7 +16,8 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
     config = None
     quiet = False
     daemon = False
-
+    global is_tag
+    
     @classmethod
     def getConfig(myClass):
         if(myClass.config == None):
@@ -59,6 +60,9 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
         for itemString in post['payload']:
             item = json.loads(itemString)
             items.append(item['repository']['url'])
+        if 'base_ref' in item:
+            # It is a tag
+            is_tag = True
         logging.debug("Items: " % items)
         return items
 
@@ -88,7 +92,11 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
                 if 'deploy' in repository:
                      if(not self.quiet):
                          logging.info("Executing deploy command for %s" % repository['path'])
-                     logging.info(check_output(['cd "' + path + '" && ' + repository['deploy']], shell=True))
+                         if is_tag:
+                             par = 'stable'
+                         else:
+                             par = 'dev'
+                     logging.info(check_output(['cd "' + path + '" && ' + repository['deploy'] + " " + par ], shell=True))
                 break
 
 def main():
