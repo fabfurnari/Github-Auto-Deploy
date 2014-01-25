@@ -5,14 +5,14 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from subprocess import check_output
 import logging
 
-log_file = '/home/builder/log/daemon.log'
-
+log_file = os.environ.get('BUILDER_LOGFILE','/home/builder/log/daemon.log')
+conf_file = os.environ.get('BUILDER_CONFFILE','/home/builder/daemon/GitAutoDeploy.conf.json')
 
 logging.basicConfig(format='%(asctime)s %(message)s',filename=log_file,level=logging.DEBUG)
 
 class GitAutoDeploy(BaseHTTPRequestHandler):
 
-    CONFIG_FILEPATH = './GitAutoDeploy.conf.json'
+    CONFIG_FILEPATH = conf_file
     config = None
     quiet = False
     daemon = False
