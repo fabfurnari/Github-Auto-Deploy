@@ -3,9 +3,19 @@
 GIT_DIST=wheezy
 EXPORT_DIR=$HOME/build-area/
 OTHER_GIT_OPTIONS=""
-INCOMING_DIR=/srv/incoming
 PACKAGE_NAME=$(grep Source ./debian/control | awk '{print $2}')
 LOGFILE=$HOME/log/$PACKAGE_NAME-build.log
+
+if [ $1 -eq 'stable' ]; then
+    echo "Setting incoming dir for stable releases"
+    INCOMING_DIR=/srv/incoming
+elif [ $1 -eq 'dev' ]; then
+    echo "Setting incoming dir for development releases"
+    INCOMING_DIR=/srv/devincoming
+else
+    echo "Unrecognizable argument"
+    exit 2
+fi
 
 echo "********* $(date) ***********" | tee -a $LOGFILE
 echo "Starting build..." | tee -a $LOGFILE

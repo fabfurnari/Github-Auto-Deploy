@@ -62,6 +62,7 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
             items.append(item['repository']['url'])
         if 'base_ref' in item:
             # It is a tag
+            logging.info("A tag has been committed")
             is_tag = True
         logging.debug("Items: " % items)
         return items, is_tag
@@ -96,7 +97,9 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
                         par = 'stable'
                      else:
                         par = 'dev'
-                     logging.info(check_output(['cd "' + path + '" && ' + repository['deploy'] + " " + par ], shell=True))
+                     cmd = 'cd "{0} && {1} {2}"'.format(path, repository['deploy'], par)
+                     logging.debug(cmd)
+                     logging.info(check_output([cmd], shell=True))
                 break
 
 def main():
