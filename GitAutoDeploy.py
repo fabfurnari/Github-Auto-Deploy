@@ -16,7 +16,6 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
     config = None
     quiet = False
     daemon = False
-    global is_tag
     
     @classmethod
     def getConfig(myClass):
@@ -44,13 +43,13 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
         return myClass.config
 
     def do_POST(self):
-        urls = self.parseRequest()
+        urls, self.is_tag = self.parseRequest()
         logging.info("Received POST request for %s " % urls)
         for url in urls:
             paths = self.getMatchingPaths(url)
             for path in paths:
                 self.pull(path)
-                self.deploy(path)
+                self.deploy(path, self.is_tag)
 
     def parseRequest(self):
         length = int(self.headers.getheader('content-length'))
@@ -62,9 +61,9 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
             items.append(item['repository']['url'])
         if 'base_ref' in item:
             # It is a tag
-            is_tag = True
+            self.is_tag = True
         logging.debug("Items: " % items)
-        return items
+        return items, self.is_tag
 
     def getMatchingPaths(self, repoUrl):
         res = []
@@ -85,17 +84,17 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
             logging.info('Updating ' + path)
         logging.info(check_output(['cd "' + path + '" && git pull'], shell=True))
 
-    def deploy(self, path):
+    def deploy(self, path, self.is_tag):
         config = self.getConfig()
         for repository in config['repositories']:
             if(repository['path'] == path):
                 if 'deploy' in repository:
                      if(not self.quiet):
                          logging.info("Executing deploy command for %s" % repository['path'])
-                         if is_tag:
-                             par = 'stable'
-                         else:
-                             par = 'dev'
+                     if self.is_tag:
+                        par = 'stable'
+                     else:
+                        par = 'dev'
                      logging.info(check_output(['cd "' + path + '" && ' + repository['deploy'] + " " + par ], shell=True))
                 break
 
@@ -134,5 +133,3 @@ def main():
 
 if __name__ == '__main__':
      main()
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
