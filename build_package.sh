@@ -7,27 +7,24 @@ PACKAGE_NAME=$(grep Source ./debian/control | awk '{print $2}')
 LOGFILE=$HOME/log/$PACKAGE_NAME-build.log
 BUILD_TYPE=$1
 
-function logit(){
-    echo "$(date): $@" >> $LOGFILE
-}
+logit () { echo "$(date): $@" >> $LOGFILE; }
 
 logit "START"
 if [[ "$BUILD_TYPE" == "stable" ]]; then
-    echo "Setting incoming dir for stable releases"
+    logit "Setting incoming dir for stable releases"
     INCOMING_DIR=/srv/incoming
 elif [[ "$BUILD_TYPE" == "dev" ]]; then
-    echo "Setting incoming dir for development releases"
+    logit "Setting incoming dir for development releases"
     INCOMING_DIR=/srv/devincoming
 else
-    echo "Unrecognizable argument"
+    logit "Unrecognizable argument"
     exit 2
 fi
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "Starting build..." | tee -a $LOGFILE
+logit "Starting build..." 
 
 if [ -z "$PACKAGE_NAME" ]; then
-    echo "Cannot match package name, exiting ..." | tee -a $LOGFILE
+    logit "Cannot match package name, exiting ..." 
     exit 2
 fi
 
@@ -35,40 +32,33 @@ WORKDIR=$EXPORT_DIR/$PACKAGE_NAME
 
 if [ -d $WORKDIR ];
 then
-    echo "$WORKDIR existing, removing..." | tee -a $LOGFILE
+    logit "$WORKDIR existing, removing..." 
     rm -fr $WORKDIR
     mkdir $WORKDIR
 fi
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "Starting building amd64 package..." | tee -a $LOGFILE
-/usr/bin/git-buildpackage --git-arch=amd64 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR | tee -a $LOGFILE
+logit "Starting building amd64 package..." 
+/usr/bin/git-buildpackage --git-arch=amd64 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR 
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "Starting building i386 package" | tee -a $LOGFILE
-/usr/bin/git-buildpackage --git-arch=i386 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR | tee -a $LOGFILE
+logit "Starting building i386 package" 
+/usr/bin/git-buildpackage --git-arch=i386 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR 
 
 cd $WORKDIR
 CHANGES64=$(ls *amd64*changes)
 CHANGES32=$(ls *i386*changes)
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "Merging changes..." | tee -a $LOGFILE
+logit "Merging changes..." 
 mergechanges -f $CHANGES32 $CHANGES64
 MULTI_CHANGES=$(ls *multi*changes)
-echo "Created merged changes file: $MULTI_CHANGES" | tee -a $LOGFILE
+logit "Created merged changes file: $MULTI_CHANGES" 
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "Running lintian on $MULTI_CHANGES..." | tee -a $LOGFILE
-lintian $MULTI_CHANGES | tee -a $LOGFILE
+logit "Running lintian on $MULTI_CHANGES..." 
+lintian $MULTI_CHANGES 
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "Copying files to $INCOMING_DIR..." | tee -a $LOGFILE
+logit "Copying files to $INCOMING_DIR..." 
 cp $(cat $MULTI_CHANGES | awk '/Files:/,0' | tail -n +2 | awk '{print $5}') $INCOMING_DIR
 cp $MULTI_CHANGES $INCOMING_DIR
 
-echo "********* $(date) ***********" | tee -a $LOGFILE
-echo "END" | tee -a $LOGFILE
+logit "END" 
 echo
-echo 
-
+ 
