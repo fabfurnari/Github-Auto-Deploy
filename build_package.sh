@@ -15,7 +15,7 @@ log()
   done
 }
 
-say () { echo "$(date): $@" >> $LOGFILE; }
+say () { echo "[ $(date +"%D %T")] $@" >> $LOGFILE; }
 
 say "START"
 if [[ "$BUILD_TYPE" == "stable" ]]; then
