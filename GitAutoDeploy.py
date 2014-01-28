@@ -97,7 +97,7 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
                         par = 'stable'
                      else:
                         par = 'dev'
-                     cmd = 'cd "{0} && {1} {2}"'.format(path, repository['deploy'], par)
+                     cmd = 'cd "{0}" && {1} {2}'.format(path, repository['deploy'], par)
                      logging.debug(cmd)
                      logging.info(check_output([cmd], shell=True))
                 break
