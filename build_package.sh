@@ -6,10 +6,10 @@ OTHER_GIT_OPTIONS=""
 PACKAGE_NAME=$(grep Source ./debian/control | awk '{print $2}')
 LOGFILE=$HOME/log/$PACKAGE_NAME-build.log
 
-if [ $1 -eq 'stable' ]; then
+if [ $1 == 'stable' ]; then
     echo "Setting incoming dir for stable releases"
     INCOMING_DIR=/srv/incoming
-elif [ $1 -eq 'dev' ]; then
+elif [ $1 == 'dev' ]; then
     echo "Setting incoming dir for development releases"
     INCOMING_DIR=/srv/devincoming
 else
