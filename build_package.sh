@@ -25,8 +25,8 @@ elif [[ "$BUILD_TYPE" == "dev" ]]; then
     say "Setting incoming dir for development releases"
     INCOMING_DIR=/srv/devincoming
 else
-    say "Unrecognizable argument"
-    exit 2
+    say "No BUILD_TYPE specified, not moving to incoming dir after build"
+    INCOMING_DIR=/dev/null
 fi
 
 say "Starting build..." 
