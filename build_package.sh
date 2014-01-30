@@ -1,11 +1,19 @@
 #!/bin/bash
 
+# PATHS
+PIUPARTS=/usr/sbin/piuparts
+MERGECHANGES=/usr/bin/mergechanges
+LINTIAN=/usr/sbin/lintian
+GIT_BUILDPACKAGE=/usr/bin/git-buildpackage
+
 GIT_DIST=wheezy
 EXPORT_DIR=$HOME/build-area/
 OTHER_GIT_OPTIONS=""
 PACKAGE_NAME=$(grep Source ./debian/control | awk '{print $2}')
 LOGFILE=$HOME/log/$PACKAGE_NAME-build.log
 BUILD_TYPE=$1
+PIUPARTS_BASE=/home/builder/cache/piuparts-chroot
+PIUPARTS_OPTIONS="-d wheezy -b $PIUPARTS_BASE "
 
 log() 
 {
@@ -41,31 +49,34 @@ WORKDIR=$EXPORT_DIR/$PACKAGE_NAME
 if [ -d $WORKDIR ];
 then
     say "$WORKDIR existing, removing..." 
-    rm -fr $WORKDIR
-    mkdir $WORKDIR
+    /bin/rm -fr $WORKDIR
+    /bin/mkdir $WORKDIR
 fi
 
 say "Starting building amd64 package..." 
-/usr/bin/git-buildpackage --git-arch=amd64 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR | log
+$GIT_BUILDPACKAGE --git-arch=amd64 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR | log
 
 say "Starting building i386 package" 
-/usr/bin/git-buildpackage --git-arch=i386 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR | log
+$GIT_BUILDPACKAGE --git-arch=i386 --git-pbuilder --git-dist=$GIT_DIST --git-export-dir=$WORKDIR | log
 
 cd $WORKDIR
 CHANGES64=$(ls *amd64*changes)
 CHANGES32=$(ls *i386*changes)
 
 say "Merging changes..." 
-mergechanges -f $CHANGES32 $CHANGES64
+$MERGECHANGES -f $CHANGES32 $CHANGES64
 MULTI_CHANGES=$(ls *multi*changes)
 say "Created merged changes file: $MULTI_CHANGES" 
 
 say "Running lintian on $MULTI_CHANGES..." 
-lintian $MULTI_CHANGES | log
+$LINTIAN $MULTI_CHANGES | log
+
+say "Running piuparts on $MULTI_CHANGES"
+$PIUPARTS $PIUPARTS_OPTIONS $MULTI_CHANGES | log
 
 say "Copying files to $INCOMING_DIR..." 
-cp -v $(cat $MULTI_CHANGES | awk '/Files:/,0' | tail -n +2 | awk '{print $5}') $INCOMING_DIR | log
-cp -v $MULTI_CHANGES $INCOMING_DIR | log
+/bin/cp -v $(cat $MULTI_CHANGES | awk '/Files:/,0' | tail -n +2 | awk '{print $5}') $INCOMING_DIR | log
+/bin/cp -v $MULTI_CHANGES $INCOMING_DIR | log
 
 say "END" 
 echo
