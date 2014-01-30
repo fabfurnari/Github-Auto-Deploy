@@ -3,7 +3,7 @@
 # PATHS
 PIUPARTS=/usr/sbin/piuparts
 MERGECHANGES=/usr/bin/mergechanges
-LINTIAN=/usr/sbin/lintian
+LINTIAN=/usr/bin/lintian
 GIT_BUILDPACKAGE=/usr/bin/git-buildpackage
 
 # OTHER OPTIONS
