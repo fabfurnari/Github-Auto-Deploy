@@ -73,7 +73,7 @@ say "Running lintian on $MULTI_CHANGES..."
 $LINTIAN $MULTI_CHANGES | log
 
 say "Running piuparts on $MULTI_CHANGES"
-$PIUPARTS $PIUPARTS_OPTIONS $MULTI_CHANGES | log
+sudo $PIUPARTS $PIUPARTS_OPTIONS $MULTI_CHANGES | log
 
 say "Copying files to $INCOMING_DIR..." 
 /bin/cp -v $(cat $MULTI_CHANGES | awk '/Files:/,0' | tail -n +2 | awk '{print $5}') $INCOMING_DIR | log
