@@ -6,6 +6,7 @@ MERGECHANGES=/usr/bin/mergechanges
 LINTIAN=/usr/sbin/lintian
 GIT_BUILDPACKAGE=/usr/bin/git-buildpackage
 
+# OTHER OPTIONS
 GIT_DIST=wheezy
 EXPORT_DIR=$HOME/build-area/
 OTHER_GIT_OPTIONS=""
@@ -13,7 +14,7 @@ PACKAGE_NAME=$(grep Source ./debian/control | awk '{print $2}')
 LOGFILE=$HOME/log/$PACKAGE_NAME-build.log
 BUILD_TYPE=$1
 PIUPARTS_BASE=/home/builder/cache/piuparts-chroot
-PIUPARTS_OPTIONS="-d wheezy -b $PIUPARTS_BASE "
+PIUPARTS_OPTIONS="-d $GIT_DIST -b $PIUPARTS_BASE "
 
 log() 
 {
