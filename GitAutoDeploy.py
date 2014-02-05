@@ -60,6 +60,7 @@ class GitAutoDeploy(BaseHTTPRequestHandler):
         for itemString in post['payload']:
             item = json.loads(itemString)
             items.append(item['repository']['url'])
+        logging.debug("POST payload: %s" % items)
         if 'base_ref' in item:
             # It is a tag
             logging.info("A tag has been committed")
